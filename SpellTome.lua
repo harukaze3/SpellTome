@@ -50,13 +50,7 @@ for i = 1, 3 do
     tabContents[i] = content
 end
 
-local BuildSpellsContent
-local BuildScrollContent
-local ApplySearch
-local ResetScrollSystem
-local AddHeader
-local MakeIconFrame
-local BuildTab2AllSpellsContent
+
 
 -- -----------------------------------------------------------------------
 local spellsAllSpells = {10,17,53,78,99,116,118,133,136,139,168,172,331,348,370,403,408,465,467,543,585,587,588,589,596,604,635,686,688,687,689,693,697,702,703,710,724,755,759,772,779,845,853,879,974,980,1008,1022,1064,1079,1098,1120,1126,1130,1160,1194,1241,1243,1454,1449,1459,1463,1464,14752,1490,1495,1499,14914,1513,15407,1714,1752,1850,1856,19236,19306,19386,1943,1949,19434,19476,1966,1978,19740,19742,19750,19876,19888,19891,19975,2006,2008,20043,20233,20243,20484,2054,2060,2061,2096,2098,2120,2136,20925,21562,21849,22568,22570,23455,2362,23922,24275,25782,25894,25914,2637,26364,2643,26573,26679,27243,27576,2812,28176,2908,2912,29170,2944,2948,2973,29722,29893,30108,30283,3044,30455,30706,31633,31661,31935,32379,32546,32645,33745,33876,33878,34861,34913,34914,3599,3674,36744,403,41635,42243,42955,43987,44203,44614,45297,45517,47897,50518,50577,50582,50769,5143,5171,5176,5185,5217,5221,5277,5308,5394,5504,5570,56354,56641,5675,5676,5730,5740,5782,57763,587,58861,59881,6117,61391,6143,61846,6201,6229,6343,6353,6366,6572,6673,6770,6807,686,702,703,7235,7302,8004,8024,8033,8042,8050,8056,8070,8071,8092,8122,8181,8184,8190,8227,8232,8349,8676,8921,8936,8990,8998,9005,9484,9634,10595,11113,11366,11426,12294,12956,13165,13797,13813,16511,16689,16827,16914,17877,18220}
@@ -82,6 +76,7 @@ normalizeNumericList(spellsAllSpells)
 -- ---------------------------------------------------------------------------
 
 
+
 local function CreateSearchBox(parent, name)
     local box = CreateFrame("EditBox", name, parent, "InputBoxTemplate")
     box:SetWidth(160)
@@ -93,6 +88,30 @@ local function CreateSearchBox(parent, name)
     label:SetPoint("BOTTOMLEFT", box, "TOPLEFT", 0, 2)
     label:SetText("Search:")
     return box
+end
+
+local function CreateTabButton(i, prevBtn)
+    local btn = CreateFrame("Button", "SpellTomeTabButton"..i, frame)
+    btn:SetWidth(128)
+    btn:SetHeight(64)
+    btn:SetHitRectInsets(15, 14, 13, 15)
+    if i == 1 then
+        btn:SetPoint("CENTER", frame, "BOTTOMLEFT", 79, 61)
+    else
+        btn:SetPoint("LEFT", prevBtn, "RIGHT", -20, 0)
+    end
+    btn:SetNormalTexture("Interface\\SpellBook\\UI-SpellBook-Tab-Unselected")
+    btn:SetDisabledTexture("Interface\\SpellBook\\UI-SpellBook-Tab3-Selected")
+    btn:SetHighlightTexture("Interface\\SpellBook\\UI-SpellbookPanel-Tab-Highlight")
+    btn:GetHighlightTexture():SetBlendMode("ADD")
+    local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    label:SetPoint("CENTER", btn, "CENTER", 0, 3)
+    label:SetText(tabNames[i])
+    btn:SetScript("OnClick", function()
+        PlaySound(836)
+        SelectTab(i)
+    end)
+    return btn
 end
 
 
@@ -180,12 +199,13 @@ local categoryDefs = {
     { "Requires Dependencies", depSpells    },
 }
 
+
 local ev = CreateFrame("Frame")
 ev:RegisterEvent("ADDON_LOADED")
 ev:RegisterEvent("PLAYER_LOGIN")
 ev:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "SpellTome" then
-        if type(BuildTab2All) == "function" then pcall(BuildTab2All) end
+        if type(BuildTab2AllSpellsContent) == "function" then pcall(BuildTab2AllSpellsContent) end
     end
 end)
 
@@ -1147,7 +1167,7 @@ if classToggleBtn then classToggleBtn:Show(); UpdateClassToggleButton() end
 BuildTab2Content("class")
 BuildScrollContent("role")
 
-local function SelectTab(index)
+SelectTab = function(index)
     for i = 1, 3 do
         tabContents[i]:Hide()
         if i == index then
@@ -1157,36 +1177,19 @@ local function SelectTab(index)
         end
     end
     tabContents[index]:Show()
+    -- Hide tab 3 search arrows when switching tabs
+    if ss3 and ss3.topArrow then ss3.topArrow:Hide() end
+    if ss3 and ss3.bottomArrow then ss3.bottomArrow:Hide() end
+    -- Clear all search fields when switching tabs
+    if spellSearchBox then spellSearchBox:SetText("") end
+    if tab2SearchBox then tab2SearchBox:SetText("") end
+    if tab3SearchBox then tab3SearchBox:SetText("") end
 end
 
 -- Tab buttons: 128x64, anchored to match SpellBookFrameTabButton1/2/3 from SpellBookFrame.xml
+
 for i = 1, 3 do
-    local btn = CreateFrame("Button", "SpellTomeTabButton"..i, frame)
-    btn:SetWidth(128)
-    btn:SetHeight(64)
-    btn:SetHitRectInsets(15, 14, 13, 15)
-
-    if i == 1 then
-        btn:SetPoint("CENTER", frame, "BOTTOMLEFT", 79, 61)
-    else
-        btn:SetPoint("LEFT", tabButtons[i - 1], "RIGHT", -20, 0)
-    end
-
-    btn:SetNormalTexture("Interface\\SpellBook\\UI-SpellBook-Tab-Unselected")
-    btn:SetDisabledTexture("Interface\\SpellBook\\UI-SpellBook-Tab3-Selected")
-    btn:SetHighlightTexture("Interface\\SpellBook\\UI-SpellbookPanel-Tab-Highlight")
-    btn:GetHighlightTexture():SetBlendMode("ADD")
-
-    local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    label:SetPoint("CENTER", btn, "CENTER", 0, 3)
-    label:SetText(tabNames[i])
-
-    btn:SetScript("OnClick", function()
-        PlaySound(836)  -- IG_ABILITY_PAGE_TURN (SoundKitConstants.lua: IG_ABILITY_PAGE_TURN = 836)
-        SelectTab(i)
-    end)
-
-    tabButtons[i] = btn
+    tabButtons[i] = CreateTabButton(i, tabButtons[i-1])
 end
 
 -- Select first tab on load
