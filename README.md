@@ -13,4 +13,8 @@ A hand-tailored spell tome for GrimfallWoW, attempting to list all available spe
   - Doesn't spoof any of the gamefiles, so no risk of getting the addon banned or worse, getting yourself banned for using it.
 
 
-![Some Screenshots of How the Addon Works](https://imgur.com/a/AP3l0wh)
+[Some Screenshots of How the Addon Works]
+https://imgur.com/eFk77Pj
+https://imgur.com/ke0AGgw
+https://imgur.com/nNuF33P https://imgur.com/M0LCwbI
+https://imgur.com/XTRLLFZ
