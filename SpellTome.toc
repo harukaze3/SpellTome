@@ -1,7 +1,0 @@
-## Interface: 30300
-## Author: Haruka
-## Title: SpellTome |cff999999(v0.9.1)|r
-## Notes: A hand-tailored spell tome for GrimfallWoW, attempting to list all available spells and talents to the player.
-## Version: 0.9.1
-
-SpellTome.lua
